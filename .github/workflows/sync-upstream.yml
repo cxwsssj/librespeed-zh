@@ -30,6 +30,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # README.md 使用 merge=ours，合并时保留本仓库的中文说明
           git config merge.ours.driver true
+          # 上游若只改 README，合并会直接采用上游版本；先备份，合并后再恢复
+          cp README.md "$RUNNER_TEMP/README.zh.md"
           git remote add upstream https://github.com/librespeed/speedtest.git
           git fetch --no-tags upstream master
           if git merge-base --is-ancestor upstream/master HEAD; then
@@ -38,6 +40,7 @@ jobs:
             exit 0
           fi
           git merge --no-edit upstream/master
+          cp "$RUNNER_TEMP/README.zh.md" README.md
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Regenerate zh-CN overlay
