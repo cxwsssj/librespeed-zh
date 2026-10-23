@@ -35,7 +35,45 @@ Dockerfile.zh                       基于官方镜像叠加中文覆盖层
 
 `Dockerfile.zh` 把中文文件复制到镜像的 `/speedtest/` 源目录；容器启动时，官方 entrypoint 会照常把它们复制进 web 根目录。
 
-## 构建与运行
+## 直接拉取（推荐给使用者）
+
+镜像已发布到 GitHub Container Registry（GHCR，公开，可匿名拉取，无需登录）：
+
+```bash
+docker pull ghcr.io/cxwsssj/librespeed-zh:latest
+```
+
+`compose.yaml` 示例：
+
+```yaml
+services:
+  librespeed:
+    image: ghcr.io/cxwsssj/librespeed-zh:latest
+    container_name: librespeed
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      MODE: standalone
+      USE_NEW_DESIGN: "true"
+      TELEMETRY: "true"
+      ENABLE_ID_OBFUSCATION: "true"
+      PASSWORD: "统计页密码"
+      GDPR_EMAIL: "privacy@example.com"
+    volumes:
+      - ./db:/database
+```
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+- 架构：`linux/amd64`、`linux/arm64`
+- 标签：`latest`、`sha-<短提交>`；打 `v*` tag 时还会生成版本号标签
+- 发布流程：`.github/workflows/publish-zh.yml`，每次 push 到 `master` 自动构建并推送
+
+## 自己构建
 
 ```bash
 docker build -f Dockerfile.zh -t librespeed-zh:latest .
