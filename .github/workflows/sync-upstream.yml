@@ -28,6 +28,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # README.md 使用 merge=ours，合并时保留本仓库的中文说明
+          git config merge.ours.driver true
           git remote add upstream https://github.com/librespeed/speedtest.git
           git fetch --no-tags upstream master
           if git merge-base --is-ancestor upstream/master HEAD; then

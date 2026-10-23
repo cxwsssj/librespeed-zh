@@ -1,118 +1,115 @@
 ![LibreSpeed Logo](https://github.com/librespeed/speedtest/blob/master/.logo/logo3.png?raw=true)
 
-# LibreSpeed
+# LibreSpeed 简体中文版
 
-No Flash, No Java, No Websocket, No Bullshit.
+基于 [librespeed/speedtest](https://github.com/librespeed/speedtest) 的自用 fork，在保留上游全部测速能力的前提下，提供**简体中文界面**，并每天自动跟随上游更新。
 
-This is a very lightweight speed test implemented in Javascript, using XMLHttpRequest and Web Workers.
+- 上游项目：https://github.com/librespeed/speedtest
+- 本仓库：https://github.com/cxwsssj/librespeed-zh
+- 许可证：LGPL-3.0（与上游一致）
 
-## Try it
+## 特性
 
-[Take a speed test](https://librespeed.org)
+- 下载 / 上传 / 延迟 / 抖动测试，现代版星空 UI
+- 遥测与结果统计页（SQLite / MySQL / PostgreSQL / MSSQL，可选）
+- 结果分享（PNG 图片 + JSON API）
+- 连接稳定性测试（延迟曲线、丢包率、阈值告警、CSV 导出）
+- 多测速节点（M-POT），以及官方 CLI / Android / .NET 客户端兼容
+- 简体中文覆盖：主页、按钮与状态、隐私政策、稳定性页、统计页
 
-## Compatibility
+## 中文实现方式
 
-All modern browsers are supported: IE11, latest Edge, latest Chrome, latest Firefox, latest Safari.
-Works with mobile versions too.
+**不修改上游任何文件**，中文内容单独放在覆盖层里，避免自动同步时产生合并冲突：
 
-## Features
+```
+i18n/zh-CN/                         中文覆盖层（提交到仓库）
+  index-modern.html                 测速主页
+  speedtest.js                      少量报错文案
+  stability.html                    稳定性测试页
+  frontend/javascript/index.js      按钮、状态、分享等动态文案
+  results/stats.php                 统计页
+scripts/zh_translate.py             翻译规则与生成脚本（翻译的唯一来源）
+Dockerfile.zh                       基于官方镜像叠加中文覆盖层
+.github/workflows/sync-upstream.yml 每日同步上游并重新生成中文
+```
 
-* Download
-* Upload
-* Ping
-* Jitter
-* IP Address, ISP, distance from server (optional)
-* Telemetry (optional)
-* Results sharing (optional)
-* Multiple Points of Test (optional)
-* Connection stability test with latency charting, loss tracking, threshold alerts, and CSV export
+`Dockerfile.zh` 把中文文件复制到镜像的 `/speedtest/` 源目录；容器启动时，官方 entrypoint 会照常把它们复制进 web 根目录。
 
-![Screenrecording of a running Speedtest](https://speedtest.fdossena.com/mpot_v7.gif)
+## 构建与运行
 
-## Server requirements
+```bash
+docker build -f Dockerfile.zh -t librespeed-zh:latest .
+```
 
-* A reasonably fast web server with Apache 2 (nginx, IIS also supported)
-* PHP 5.4 or newer (other backends also available)
-* MariaDB or MySQL database to store test results (optional, Microsoft SQL Server, PostgreSQL and SQLite also supported)
-* A fast! internet connection
+Docker Compose 示例：
 
-## Installation
+```yaml
+services:
+  librespeed:
+    image: librespeed-zh:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.zh
+    container_name: librespeed
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8080"
+    environment:
+      MODE: standalone
+      USE_NEW_DESIGN: "true"
+      TELEMETRY: "true"
+      ENABLE_ID_OBFUSCATION: "true"
+      PASSWORD: "统计页密码"
+      GDPR_EMAIL: "privacy@example.com"
+    volumes:
+      - ./db:/database
+```
 
-Assuming you have PHP and a web server installed, the installation steps are quite simple.
+注意：
 
-1. Download the source code and extract it
-1. Copy the project files to your web server's shared folder (ie. `/var/www/html/speedtest` for Apache), keeping the layout as it is in the repository. The modern UI loads its assets from `frontend/`, so that directory is copied as a whole rather than unpacked.
-1. Optionally, copy the results folder too, and set up the database using the config file in it.
-1. Be sure your permissions allow read and execute access where needed.
-1. Visit YOURSITE/speedtest/index.html and voila!
+- 标题与副标题已写死在 `i18n/zh-CN/index-modern.html` 中，官方 entrypoint 的 `TITLE` / `TAGLINE` 环境变量不再生效。
+- 开启 `TELEMETRY` 后，结果保存在 `/database/db.sql`（默认 SQLite），统计页为 `/results/stats.php`。
+- 经典版界面（`index-classic.html`）未汉化，本项目只针对现代版 UI。
 
-### Installation Video
+## 反向代理
 
-This video shows the installation process of a standalone LibreSpeed server: [Quick start installation guide for Debian 12](https://fdossena.com/?p=speedtest/quickstart_deb12.frag)
+放在 Nginx / NPM 后面时：
 
-More videos will be added later.
+- 允许较大的 POST 请求体（上传测速，建议 ≥ 35 MB）；
+- 代理超时大于 60 秒；
+- 高带宽环境下建议对该站点关闭 `proxy_buffering`，避免测速数据被缓冲到临时文件。
 
-## Android app
+## 每日自动同步
 
-A template to build an Android client for your LibreSpeed installation is available [here](https://github.com/librespeed/speedtest-android).
+`.github/workflows/sync-upstream.yml` 每天 **04:17 UTC（北京时间 12:17）** 执行：
 
-## CLI client
+1. 合并 `librespeed/speedtest` 的 `master`；
+2. 重新运行 `scripts/zh_translate.py` 生成 `i18n/zh-CN/`；
+3. 提交并推送更新。
 
-A command line client is available [here](https://github.com/librespeed/speedtest-cli).
+`README.md` 通过 `.gitattributes` 的 `merge=ours` 保留本仓库版本，不会被上游 README 覆盖。
 
-## .NET client
+fork 仓库首次使用时，如果 Actions 没有自动运行，需要在 Actions 页面手动启用一次，或手动触发 `Sync upstream`。
 
-A .NET client library is available in the [`LibreSpeed.NET`](https://github.com/Memphizzz/LibreSpeed.NET) repo ([NuGet](https://www.nuget.org/packages/LibreSpeed.NET)), maintained by [MemphiZ](https://github.com/Memphizzz).
+## 翻译维护
 
-## Development
+```bash
+python3 scripts/zh_translate.py
+```
 
-If you want to contribute or develop with LibreSpeed, see [DEVELOPMENT.md](DEVELOPMENT.md) for information about using npm for development tasks, linting, and formatting.
+- 全部匹配：输出 `All translations applied cleanly.`
+- 出现 `WARN`：上游英文文案有变动，在 `scripts/zh_translate.py` 对应文件的规则里补一条翻译即可。
 
-## Design switch
+## 与上游的差异
 
-LibreSpeed supports both the classic and modern UI. The root `index.html` acts as a lightweight switcher and redirects to `index-classic.html` or `index-modern.html` based on `config.json` (`useNewDesign`) or URL overrides (`?design=new` / `?design=old`). For architecture and deployment details (including Docker behavior), see [DESIGN_SWITCH.md](DESIGN_SWITCH.md).
+- 增加 `i18n/zh-CN/`、`scripts/zh_translate.py`、`Dockerfile.zh`、同步工作流和本说明；
+- 不修改上游的 HTML / JS / PHP 源文件；
+- 未改动测速协议与后端接口，官方客户端仍可正常对接。
 
-## Stability test
+## 致谢与许可
 
-LibreSpeed includes a standalone connection stability test at `stability.html`, linked from both the classic and modern interfaces. It repeatedly measures ping over a selected duration and reports current, average, minimum, maximum, jitter, and failed request percentage values with a live chart.
-
-The stability test can target the local LibreSpeed backend, one of the configured multiple points of test, or built-in external targets such as Google, Cloudflare, and Apple. It also supports optional latency threshold alerts and CSV export of the collected samples. Docker deployments copy `stability.html` and `stability_worker.js` into the web root and reuse the same server list configuration as the main UI.
-
-## Docker
-
-A docker image is available on [GitHub](https://github.com/librespeed/speedtest/pkgs/container/speedtest), check our [docker documentation](doc_docker.md) for more info about it.
-The image is built every week to include an updated version of the ipinfo-DB used for ISP detection. Also this ensures, that the latest security patches in PHP are installed. Therefore we recommend to use the `latest` image.
-
-## Go backend
-
-A Go implementation is available in the [`speedtest-go`](https://github.com/librespeed/speedtest-go) repo, maintained by [Maddie Zhan](https://github.com/maddie).
-
-## Rust backend
-
-A Rust implementation is available in the [`speedtest-rust`](https://github.com/librespeed/speedtest-rust) repo, maintained by [Sudo Dios](https://github.com/sudodios).
-
-## Node.js backend
-
-A partial Node.js implementation is available in the `node` branch, developed by [dunklesToast](https://github.com/dunklesToast). It's not recommended to use at the moment.
-
-## Donate
-
-[![Donate with Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/fdossena/donate)
-[Donate with PayPal](https://www.paypal.me/sineisochronic)
-
-## License
+测速引擎、后端与原始界面来自 [LibreSpeed](https://github.com/librespeed/speedtest)，作者 Federico Dossena 及贡献者。
 
 Copyright (C) 2016-2024 Federico Dossena
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/lgpl>.
+本程序为自由软件，依据 GNU Lesser General Public License v3 或更新版本发布；本仓库的中文覆盖层同样采用 LGPL-3.0。详见 [LICENSE](LICENSE)。
