@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description"
+    content="自由开源的网络测速工具。可直接在浏览器中运行，也支持在 PHP、Go、Rust 或 Node 服务器上自建。LGPL 许可证。" />
+  <link rel="shortcut icon" href="frontend/images/favicon.svg" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="images/icon-192.png" />
+  <meta name="theme-color" content="#000000" />
+  <script type="text/javascript" src="speedtest.js"></script>
+  <script type="text/javascript">
+    // Set this to a different URL to load the server list from another location.
+    var SPEEDTEST_SERVERS = "server-list.json";
+  </script>
+  <script type="text/javascript" src="frontend/javascript/index.js"></script>
+  <link rel="stylesheet" type="text/css" href="frontend/styling/index.css" />
+  <title>fxm-speedtest - 自由开源测速</title>
+</head>
+
+<body>
+  <header>
+    <img src="frontend/images/logo.svg" alt="LibreSpeed" />
+  </header>
+  <main>
+    <h1>自由开源测速</h1>
+    <p class="tagline">无需 Flash、Java、WebSocket，没有废话</p>
+
+    <div class="server-selector">
+      <div class="chosen">
+        <div class="chevron">
+          <img src="frontend/images/chevron.svg" alt="选择服务器" />
+        </div>
+        <p>当前服务器</p>
+        <h2 id="selected-server">正在查找最近的服务器…</h2>
+      </div>
+      <ul class="servers"></ul>
+      <p class="sponsor" id="sponsor">&nbsp;</p>
+    </div>
+
+    <p id="privacy-warning" class="hidden">
+      点击开始按钮即表示你同意我们的隐私政策<br />
+      <a href="#" id="choose-privacy">或自定义隐私选项</a>
+    </p>
+    <button class="disabled" id="start-button"></button>
+
+    <div class="gauge-layout">
+      <div class="ping hidden">
+        <span class="label">延迟</span>:&nbsp;
+        <span class="value" id="ping">00</span>ms
+      </div>
+
+      <div class="gauge download" id="download-gauge">
+        <div class="progress"></div>
+        <div class="speed"></div>
+        <h1><span id="download-speed">00</span> Mbps</h1>
+        <h2>下载</h2>
+      </div>
+
+      <div class="gauge upload" id="upload-gauge">
+        <div class="progress"></div>
+        <div class="speed"></div>
+        <h1><span id="upload-speed">00</span> Mbps</h1>
+        <h2>上传</h2>
+      </div>
+
+      <div class="jitter hidden">
+        <span class="label">抖动</span>:&nbsp;
+        <span class="value" id="jitter">00</span>ms
+      </div>
+    </div>
+
+    <button class="small inverted hidden" id="share-results">
+      分享结果
+    </button>
+  </main>
+  <footer>
+    <p class="source">
+      <a href="stability.html">稳定性测试</a> | <a href="https://github.com/librespeed/speedtest">源代码</a>
+    </p>
+  </footer>
+
+  <dialog id="share">
+    <div class="close-dialog">
+      <img src="frontend/images/close-button.svg" alt="关闭" />
+    </div>
+    <img id="results" src="" alt="测速结果图" />
+    <button id="copy-link">复制链接</button>
+  </dialog>
+
+  <dialog id="privacy">
+    <div class="close-dialog">
+      <img src="frontend/images/close-button.svg" alt="关闭" />
+    </div>
+    <section>
+      <h1>隐私政策</h1>
+      <p>
+        本 HTML5 测速服务器已开启遥测（结果记录）。
+      </p>
+
+      <h2>我们收集哪些数据</h2>
+      <p>
+        测速结束后，会收集并保存以下数据：
+      </p>
+
+      <ul>
+        <li>测试 ID</li>
+        <li>测试时间</li>
+        <li>测试结果（下载/上传速度、延迟、抖动）</li>
+        <li>IP 地址</li>
+        <li>运营商信息</li>
+        <li>大致位置（根据 IP 推断，非 GPS）</li>
+        <li>浏览器 UA 与语言</li>
+        <li>测试日志（不含个人信息）</li>
+      </ul>
+
+      <h2>数据用途</h2>
+      <p>通过本服务收集的数据用于：</p>
+
+      <ul>
+        <li>
+          生成可分享的测试结果（论坛图片等）
+        </li>
+        <li>
+          改进服务质量（例如发现服务端问题）
+        </li>
+      </ul>
+
+      <p>不会向第三方披露任何个人信息。</p>
+
+      <h2>你的同意</h2>
+      <p>
+        开始测速即表示你同意本隐私政策的条款。
+      </p>
+
+      <h2>数据删除</h2>
+      <p>
+        如需删除你的信息，请提供测试 ID 或 IP 地址。这是识别你数据的唯一方式，缺少这些信息我们将无法处理请求。
+      </p>
+      <p>
+        删除请求请联系：
+        <a href="mailto:PUT@YOUR_EMAIL.HERE">TO BE FILLED BY DEVELOPER</a>.
+      </p>
+    </section>
+    <button id="close-privacy">关闭</button>
+  </dialog>
+</body>
+
+</html>

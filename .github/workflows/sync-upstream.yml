@@ -1,0 +1,57 @@
+name: Sync upstream
+
+on:
+  schedule:
+    # 每天 04:17 UTC（北京时间 12:17）检查一次上游
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Merge upstream master
+        id: merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/librespeed/speedtest.git
+          git fetch --no-tags upstream master
+          if git merge-base --is-ancestor upstream/master HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Already up to date."
+            exit 0
+          fi
+          git merge --no-edit upstream/master
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Regenerate zh-CN overlay
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          if ! python3 scripts/zh_translate.py; then
+            echo "::warning::上游文案有变动，部分条目未翻译，请更新 scripts/zh_translate.py 的规则"
+          fi
+
+      - name: Commit and push
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "chore: sync upstream and regenerate zh-CN overlay"
+            git push origin master
+          else
+            echo "No generated changes to commit."
+          fi

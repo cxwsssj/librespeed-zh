@@ -1,0 +1,9 @@
+# 基于官方镜像叠加简体中文覆盖层。
+# 汉化文件由 scripts/zh_translate.py 从上游源码 + 翻译规则生成。
+FROM ghcr.io/librespeed/speedtest:latest
+
+COPY i18n/zh-CN/index-modern.html /speedtest/index-modern.html
+COPY i18n/zh-CN/speedtest.js /speedtest/speedtest.js
+COPY i18n/zh-CN/stability.html /speedtest/stability.html
+COPY i18n/zh-CN/frontend/javascript/index.js /speedtest/frontend/javascript/index.js
+COPY i18n/zh-CN/results/stats.php /speedtest/results/stats.php
